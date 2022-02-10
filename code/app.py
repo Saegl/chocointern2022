@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sanic import Sanic, response
 from sanic.request import Request
 
@@ -17,16 +19,16 @@ async def search(request: Request):
     return response.json({"id": "d9e0cf5a-6bb8-4dae-8411-6caddcfd52da"})
 
 
-@app.route("/search/<search_id>")
-async def search(request: Request, search_id):
+@app.route("/search/<search_id:uuid>")
+async def search(request: Request, search_id: UUID):
     status = "PENDING"  # PENDING or DONE
     return response.json(
         {"search_id": search_id, "status": status, "items": []}
     )
 
 
-@app.route("/offers/<offer_id>")
-async def offers(request: Request, offer_id):
+@app.route("/offers/<offer_id:uuid>")
+async def offers(request: Request, offer_id: UUID):
     return response.json(OFFER_EXAMPLE)
 
 
@@ -40,8 +42,8 @@ async def booking(request: Request):
     return response.json(BOOKING_EXAMPLE)
 
 
-@app.route("/booking/<booking_id>")
-async def booking(request: Request, booking_id):
+@app.route("/booking/<booking_id:uuid>")
+async def booking(request: Request, booking_id: UUID):
     return response.json(BOOKING_ID_DETAILS_EXAMPLE)
 
 
