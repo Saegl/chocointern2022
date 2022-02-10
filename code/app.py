@@ -23,7 +23,7 @@ async def search(request: Request):
 async def search(request: Request, search_id: UUID):
     status = "PENDING"  # PENDING or DONE
     return response.json(
-        {"search_id": search_id, "status": status, "items": []}
+        {"search_id": str(search_id), "status": status, "items": []}
     )
 
 
