@@ -6,7 +6,7 @@ x-environment-vars: &environment-vars
   TERM: linux
 
 services:
-    sample-web-service:
+    mini_showcase:
         build:
             context: .
             dockerfile: ./docker/Dockerfile.local
