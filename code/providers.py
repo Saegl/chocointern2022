@@ -27,6 +27,9 @@ async def offers_booking(json_data) -> dict:
             json=json_data,
             timeout=settings.PROVIDERS_API_TIMEOUT,
         )
+    if res.status_code != 200:
+        # TODO processing for 404, 422 in stage-third
+        raise ValueError("status code is not 200")
     return res.json()
 
 

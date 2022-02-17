@@ -7,15 +7,10 @@ from sanic import Sanic, response
 from sanic.request import Request
 from tortoise.contrib.sanic import register_tortoise
 
-
-from .booking import (
-    BOOKING_ID_DETAILS_EXAMPLE,
-    BOOKING_EXAMPLE,
-    BOOKING_LIST_EXAMPLE,
-)
 from . import settings
 from . import providers
 from . import validation
+from . import models
 
 
 app = Sanic("mini-showcase")
@@ -97,18 +92,24 @@ async def get_offer_by_id(request: Request, offer_id: UUID):
 
 @app.get("/booking")
 async def get_booking(request: Request):
-    return response.json(BOOKING_LIST_EXAMPLE)
+    return response.json(request.query_args)
 
 
 @app.post("/booking")
 async def create_booking(request: Request):
+    # TODO validation
     provider_response = await providers.offers_booking(request.json)
+    await models.Booking.create(**provider_response)
     return response.json(provider_response)
 
 
 @app.get("/booking/<booking_id:uuid>")
 async def get_booking_by_id(request: Request, booking_id: UUID):
-    return response.json(BOOKING_ID_DETAILS_EXAMPLE)
+    booking = await models.Booking.get(id=str(booking_id))
+    booking_pydantic = await models.BookingPydantic.from_tortoise_orm(booking)
+    return response.raw(
+        booking_pydantic.json(), content_type="application/json"
+    )
 
 
 @app.get("/test")
