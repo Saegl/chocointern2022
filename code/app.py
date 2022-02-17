@@ -6,7 +6,6 @@ from sanic.request import Request
 import aioredis
 import ujson
 
-from code.offers import OFFER_EXAMPLE
 from code.booking import (
     BOOKING_ID_DETAILS_EXAMPLE,
     BOOKING_EXAMPLE,
@@ -36,7 +35,13 @@ async def load_search_and_save(search_id, request_data):
     provider_response = await providers.search_api(request_data)
 
     redis: aioredis.Redis = app.ctx.redis
+
+    # Save provider_response for "get_search_by_id" handler
     await redis.set(search_id, ujson.dumps(provider_response))
+
+    # Save offers for "get_offer_by_id" handler
+    for offer in provider_response["items"]:
+        await redis.set(f'offer:{offer["id"]}', ujson.dumps(offer))
 
 
 @app.post("/search")
@@ -75,7 +80,10 @@ async def get_search_by_id(request: Request, search_id: UUID):
 
 @app.get("/offers/<offer_id:uuid>")
 async def get_offer_by_id(request: Request, offer_id: UUID):
-    return response.json(OFFER_EXAMPLE)
+    redis: aioredis.Redis = app.ctx.redis
+
+    data = await redis.get(f"offer:{offer_id}")
+    return response.raw(data, content_type="application/json")
 
 
 @app.get("/booking")
