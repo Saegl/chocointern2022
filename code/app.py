@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from pydantic import ValidationError
 
 from sanic import Sanic, response
 from sanic.request import Request
@@ -13,6 +14,7 @@ from code.booking import (
 )
 from code import settings
 from code import providers
+from code import validation
 
 
 app = Sanic("mini-showcase")
@@ -41,9 +43,15 @@ async def load_search_and_save(search_id, request_data):
 async def create_search(request: Request):
     # Generate new UUID
     search_id = str(uuid4())
+    try:
+        validated_request = validation.SearchRequest(**request.json).dict()
+    except ValidationError as e:
+        # response.json() is not used,
+        # because e.json() already serialized by pydantic
+        return response.raw(body=e.json(), content_type="application/json")
 
     # Start searching without blocking
-    app.add_task(load_search_and_save(search_id, request.json))
+    app.add_task(load_search_and_save(search_id, validated_request))
     return response.json({"id": search_id})
 
 

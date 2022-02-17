@@ -2,3 +2,4 @@ sanic==21.*
 ujson==5.*
 httpx==0.22.0
 aioredis==2.*
+pydantic==1.9.*
