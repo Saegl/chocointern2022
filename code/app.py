@@ -6,14 +6,15 @@ from sanic.request import Request
 import aioredis
 import ujson
 
-from code.booking import (
+
+from .booking import (
     BOOKING_ID_DETAILS_EXAMPLE,
     BOOKING_EXAMPLE,
     BOOKING_LIST_EXAMPLE,
 )
-from code import settings
-from code import providers
-from code import validation
+from . import settings
+from . import providers
+from . import validation
 
 
 app = Sanic("mini-showcase")
@@ -32,7 +33,7 @@ async def cleanup(app, loop):
 
 
 async def load_search_and_save(search_id, request_data):
-    provider_response = await providers.search_api(request_data)
+    provider_response = await providers.offers_search(request_data)
 
     redis: aioredis.Redis = app.ctx.redis
 
@@ -93,7 +94,8 @@ async def get_booking(request: Request):
 
 @app.post("/booking")
 async def create_booking(request: Request):
-    return response.json(BOOKING_EXAMPLE)
+    provider_response = await providers.offers_booking(request.json)
+    return response.json(provider_response)
 
 
 @app.get("/booking/<booking_id:uuid>")
