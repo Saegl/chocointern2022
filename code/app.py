@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sanic import Sanic, response
 from sanic.request import Request
+import aioredis
 
 from code.offers import OFFER_EXAMPLE
 from code.booking import (
@@ -9,9 +10,20 @@ from code.booking import (
     BOOKING_EXAMPLE,
     BOOKING_LIST_EXAMPLE,
 )
+from code import settings
 
 
 app = Sanic("mini-showcase")
+
+
+@app.listener("before_server_start")
+async def init_before(app, loop):
+    app.ctx.redis = aioredis.from_url(settings.REDIS_URL)
+
+
+@app.listener("after_server_stop")
+async def cleanup(app, loop):
+    await app.ctx.redis.close()
 
 
 @app.post("/search")
