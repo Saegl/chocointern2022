@@ -1,10 +1,11 @@
 from uuid import UUID, uuid4
 from pydantic import ValidationError
 
-from sanic import Sanic, response
-from sanic.request import Request
 import aioredis
 import ujson
+from sanic import Sanic, response
+from sanic.request import Request
+from tortoise.contrib.sanic import register_tortoise
 
 
 from .booking import (
@@ -18,6 +19,13 @@ from . import validation
 
 
 app = Sanic("mini-showcase")
+
+register_tortoise(
+    app,
+    db_url=settings.DB_URI,
+    modules={"models": ["code.models"]},
+    generate_schemas=True,
+)
 
 
 @app.listener("before_server_start")

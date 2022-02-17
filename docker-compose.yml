@@ -22,8 +22,6 @@ services:
         depends_on:
             - mini_showcase_postgres
             - mini_showcase_redis
-        networks:
-            - app-tier
     mini_showcase_postgres:
         hostname: postgres
         image: postgres:14.2
@@ -49,14 +47,6 @@ services:
         image: redis:6.2.6-alpine
         ports:
             - "6379:6379"
-        networks:
-            - app-tier
-
 
 volumes:
     database-data:
-
-
-networks:
-    app-tier:
-        driver: bridge
