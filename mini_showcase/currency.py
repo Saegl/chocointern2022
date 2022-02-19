@@ -1,14 +1,22 @@
 import asyncio
 import xml.etree.ElementTree as ET
+from datetime import date
+
 import httpx
 
 
-CURRENCY_URL = "https://www.nationalbank.kz/rss/get_rates.cfm?fdate=26.10.2021"
+CURRENCY_URL_FORMAT = (
+    "https://www.nationalbank.kz/rss/get_rates.cfm?fdate={day}.{month}.{year}"
+)
 
 
 async def load_currency() -> dict[str, float]:
+    now = date.today()
+    url = CURRENCY_URL_FORMAT.format(
+        day=now.day, month=now.month, year=now.year
+    )
     async with httpx.AsyncClient() as client:
-        res = await client.get(CURRENCY_URL)
+        res = await client.get(url)
     root = ET.fromstring(res.content)
 
     currencies = {"KZT": 1.0}
@@ -26,7 +34,7 @@ async def load_currency() -> dict[str, float]:
     return currencies
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Check current currency
     # Run: `python -m mini_showcase.currency`
     from pprint import pprint
