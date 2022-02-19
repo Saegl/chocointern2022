@@ -7,10 +7,7 @@ from sanic import Sanic, response
 from sanic.request import Request
 from tortoise.contrib.sanic import register_tortoise
 
-from mini_showcase import providers
-from mini_showcase import validation
-from mini_showcase import models
-from mini_showcase import settings
+from mini_showcase import providers, validation, models, settings, tasks
 
 
 app = Sanic("mini-showcase")
@@ -35,19 +32,6 @@ async def cleanup(app, loop):
     await app.ctx.redis.close()
 
 
-async def load_search_and_save(search_id, request_data):
-    provider_response = await providers.offers_search(request_data)
-
-    redis: aioredis.Redis = app.ctx.redis
-
-    # Save provider_response for "get_search_by_id" handler
-    await redis.set(search_id, ujson.dumps(provider_response))
-
-    # Save offers for "get_offer_by_id" handler
-    for offer in provider_response["items"]:
-        await redis.set(f'offer:{offer["id"]}', ujson.dumps(offer))
-
-
 @app.post("/search")
 async def create_search(request: Request):
     # Generate new UUID
@@ -60,7 +44,9 @@ async def create_search(request: Request):
         return response.raw(body=e.json(), content_type="application/json")
 
     # Start searching without blocking
-    app.add_task(load_search_and_save(search_id, validated_request))
+    app.add_task(
+        tasks.load_search_and_save(app.ctx.redis, search_id, validated_request)
+    )
     return response.json({"id": search_id})
 
 
