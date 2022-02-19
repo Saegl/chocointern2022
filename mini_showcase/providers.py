@@ -1,7 +1,7 @@
 import asyncio
 import httpx
 
-from code import settings
+from mini_showcase import settings
 
 
 AVIA_API_ROOT = "https://avia-api.k8s-test.aviata.team"

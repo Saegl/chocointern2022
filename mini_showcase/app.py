@@ -7,10 +7,10 @@ from sanic import Sanic, response
 from sanic.request import Request
 from tortoise.contrib.sanic import register_tortoise
 
-from . import settings
-from . import providers
-from . import validation
-from . import models
+from mini_showcase import providers
+from mini_showcase import validation
+from mini_showcase import models
+from mini_showcase import settings
 
 
 app = Sanic("mini-showcase")
@@ -18,7 +18,7 @@ app = Sanic("mini-showcase")
 register_tortoise(
     app,
     db_url=settings.DB_URI,
-    modules={"models": ["code.models"]},
+    modules={"models": ["mini_showcase.models"]},
     generate_schemas=True,
 )
 

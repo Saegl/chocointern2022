@@ -20,7 +20,7 @@ pip install -r requirements/dev.txt
 ```
 4. Запускаем веб сервис
 ```bash
-python code/app.py
+python mini_showcase/app.py
 ```
 5. Увидем в консоли текст как ниже.  
 ```bash

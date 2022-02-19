@@ -16,7 +16,7 @@ services:
             - "8000:8000"
         volumes:
             - .:/proj
-        command: python -m code.app
+        command: python -m mini_showcase.app
         stdin_open: true
         tty: true
         depends_on:

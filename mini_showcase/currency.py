@@ -28,7 +28,7 @@ async def load_currency() -> dict[str, float]:
 
 if __name__ == '__main__':
     # Check current currency
-    # Run: `python -m code.currency`
+    # Run: `python -m mini_showcase.currency`
     from pprint import pprint
 
     data = asyncio.run(load_currency())
