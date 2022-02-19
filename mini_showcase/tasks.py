@@ -5,7 +5,7 @@ from mini_showcase import providers, settings
 
 
 async def load_search_and_save(redis: Redis, search_id, request_data):
-    provider_response = await providers.offers_search(request_data)
+    provider_response = await providers.search_offers(request_data)
 
     # Save provider_response for "app.get_search_by_id" handler
     await redis.setex(

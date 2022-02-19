@@ -10,7 +10,7 @@ OFFERS_SEARCH = AVIA_API_ROOT + "/offers/search"
 OFFERS_BOOKING = AVIA_API_ROOT + "/offers/booking"
 
 
-async def offers_search(json_data) -> dict:
+async def search_offers(json_data) -> dict:
     async with httpx.AsyncClient() as client:
         res = await client.post(
             OFFERS_SEARCH,
@@ -20,7 +20,7 @@ async def offers_search(json_data) -> dict:
     return res.json()
 
 
-async def offers_booking(json_data) -> dict:
+async def book_offer(json_data) -> dict:
     async with httpx.AsyncClient() as client:
         res = await client.post(
             OFFERS_BOOKING,
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     from pprint import pprint
 
     ans = asyncio.run(
-        offers_search(
+        search_offers(
             {
                 "provider": "Amadeus",
                 "cabin": "Economy",

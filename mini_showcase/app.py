@@ -84,7 +84,7 @@ async def get_booking(request: Request):
 @app.post("/booking")
 async def create_booking(request: Request):
     # TODO validation
-    provider_response = await providers.offers_booking(request.json)
+    provider_response = await providers.book_offer(request.json)
     await models.Booking.create(**provider_response)
     return response.json(provider_response)
 
