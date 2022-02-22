@@ -6,6 +6,8 @@ import ujson
 from sanic import Sanic, response
 from sanic.request import Request
 from tortoise.contrib.sanic import register_tortoise
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from pytz import timezone
 
 from mini_showcase import providers, validation, models, settings, tasks
 
@@ -25,6 +27,15 @@ async def init_before(app, loop):
     app.ctx.redis = aioredis.from_url(
         settings.REDIS_URL, decode_responses=True
     )
+
+    # Load currency on start
+    await tasks.update_currency(app)
+
+    # Then update currency every day at 12:00 by Almaty time
+    scheduler = AsyncIOScheduler({"event_loop": loop})
+    scheduler.configure(timezone=timezone("Asia/Almaty"))
+    scheduler.add_job(tasks.update_currency, "cron", hour=12, args=[app])
+    scheduler.start()
 
 
 @app.listener("after_server_stop")

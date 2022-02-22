@@ -1,7 +1,7 @@
 import ujson
 from aioredis import Redis
 
-from mini_showcase import providers, settings
+from mini_showcase import providers, settings, models
 
 
 async def load_search_and_save(redis: Redis, search_id, request_data):
@@ -23,3 +23,8 @@ async def load_search_and_save(redis: Redis, search_id, request_data):
 
         commands_success = await pipe.execute()
         assert all(commands_success)
+
+
+async def update_currency(app):
+    currency = await models.Currency.get_current_currency()
+    app.ctx.currency = currency.snapshot
