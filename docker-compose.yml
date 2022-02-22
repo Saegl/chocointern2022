@@ -16,6 +16,36 @@ services:
             - "8000:8000"
         volumes:
             - .:/proj
-        command: python -m code.app
+        command: python -m mini_showcase.app
         stdin_open: true
         tty: true
+        depends_on:
+            - mini_showcase_postgres
+            - mini_showcase_redis
+    mini_showcase_postgres:
+        hostname: postgres
+        image: postgres:14.2
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=postgres
+        volumes:
+            - database-data:/var/lib/postgresql/data
+    pgadmin:
+        image: dpage/pgadmin4:6.5
+        environment:
+            PGADMIN_DEFAULT_EMAIL: admin@admin.com
+            PGADMIN_DEFAULT_PASSWORD: root
+        ports:
+            - "5050:80"
+        depends_on:
+            - mini_showcase_postgres
+    mini_showcase_redis:
+        image: redis:6.2.6-alpine
+        ports:
+            - "6379:6379"
+
+volumes:
+    database-data:
