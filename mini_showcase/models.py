@@ -3,7 +3,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 
 
 class Booking(Model):
-    id = fields.CharField(pk=True, max_length=36)  # UUID len
+    id = fields.UUIDField(pk=True)
     pnr = fields.CharField(max_length=256)
     expires_at = fields.CharField(max_length=256)
     phone = fields.CharField(max_length=256)

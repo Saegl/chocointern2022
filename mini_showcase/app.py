@@ -91,7 +91,7 @@ async def create_booking(request: Request):
 
 @app.get("/booking/<booking_id:uuid>")
 async def get_booking_by_id(request: Request, booking_id: UUID):
-    booking = await models.Booking.get(id=str(booking_id))
+    booking = await models.Booking.get(id=booking_id)
     booking_pydantic = await models.BookingPydantic.from_tortoise_orm(booking)
     return response.raw(
         booking_pydantic.json(), content_type="application/json"
