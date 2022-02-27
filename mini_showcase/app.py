@@ -156,10 +156,5 @@ async def get_booking_by_id(request: Request, booking_id: UUID):
     )
 
 
-@app.get("/test")
-async def test(request: Request):
-    return response.json({"test": True})
-
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
