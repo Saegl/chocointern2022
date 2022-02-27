@@ -33,6 +33,28 @@ async def load_currency() -> dict[str, float]:
         currencies[currency_name] = currency_value
     return currencies
 
+def convert_to_kzt(
+    currencies: dict[str, float], from_currency_type: str, amount: float
+):
+    return amount * currencies[from_currency_type]
+
+
+def convert_from_kzt(
+    currencies: dict[str, float], to_currency_type: str, amount: float
+):
+    return amount / currencies[to_currency_type]
+
+
+def convert_items_currency(items, to_currency, currencies):
+    for item in items:
+        currency_type = item['price']['currency']
+        amount = item['price']['amount']
+
+        in_kzt = convert_to_kzt(currencies, currency_type, amount)
+
+        item['price']['amount'] = convert_from_kzt(currencies, to_currency, in_kzt)
+        item['price']['currency'] = to_currency
+
 
 if __name__ == "__main__":
     # Check current currency

@@ -64,7 +64,7 @@ async def create_search(request: Request):
 
     # Start searching without blocking
     app.add_task(
-        tasks.load_search_and_save(app.ctx.redis, search_id, request.json)
+        tasks.load_search_and_save(app, search_id, request.json)
     )
     return response.json({"id": search_id})
 
