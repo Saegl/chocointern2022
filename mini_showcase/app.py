@@ -63,9 +63,7 @@ async def create_search(request: Request):
     )
 
     # Start searching without blocking
-    app.add_task(
-        tasks.load_search_and_save(app, search_id, request.json)
-    )
+    app.add_task(tasks.load_search_and_save(app, search_id, request.json))
     return response.json({"id": search_id})
 
 
@@ -100,7 +98,42 @@ async def get_offer_by_id(request: Request, offer_id: UUID):
 
 @app.get("/booking")
 async def get_booking(request: Request):
-    return response.json(request.query_args)
+    email = request.args.get("email")
+    phone = request.args.get("phone")
+    page = request.args.get("page", None)
+    limit = request.args.get("limit", None)
+
+    filter_params = {}
+    if email:
+        filter_params["email"] = email
+    if phone:
+        filter_params["phone"] = phone
+
+    offers_query = models.Booking.filter(**filter_params)
+    total = await offers_query.count()
+    if page:
+        offers_query = offers_query.offset(int(page) * int(limit)).limit(
+            int(limit)
+        )
+
+    offers = await offers_query
+
+    items = [
+        (await models.BookingPydantic.from_tortoise_orm(offer)).dict()
+        for offer in offers
+    ]
+    for item in items:
+        # Convert UUID to string for JSON serialization
+        item["id"] = str(item["id"])
+
+    return response.json(
+        {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "items": items,
+        }
+    )
 
 
 @app.post("/booking")
