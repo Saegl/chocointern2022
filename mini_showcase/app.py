@@ -1,11 +1,10 @@
 from uuid import UUID, uuid4
-from pydantic import ValidationError
 
 import aioredis
 import ujson
-from sanic import Sanic, response
+from pydantic import ValidationError
+from sanic import Sanic, json, response
 from sanic.request import Request
-from sanic_ext import validate
 from tortoise.contrib.sanic import register_tortoise
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import timezone
@@ -45,11 +44,10 @@ async def cleanup(app, loop):
 
 
 @app.post("/search")
-@validate(json=validation.SearchRequest)
-async def create_search(request: Request, body: validation.SearchRequest):
+@validation.validate(validation.SearchRequest)
+async def create_search(request: Request):
     # Generate new UUID
     search_id = str(uuid4())
-
     # Start searching without blocking
     app.add_task(
         tasks.load_search_and_save(app.ctx.redis, search_id, request.json)
@@ -89,8 +87,8 @@ async def get_booking(request: Request):
 
 
 @app.post("/booking")
-@validate(json=validation.BookingRequest)
-async def create_booking(request: Request, body: validation.BookingRequest):
+@validation.validate(validation.BookingRequest)
+async def create_booking(request: Request):
     provider_response = await providers.book_offer(request.json)
     await models.Booking.create(**provider_response)
     return response.json(provider_response)
@@ -108,6 +106,23 @@ async def get_booking_by_id(request: Request, booking_id: UUID):
 @app.get("/test")
 async def test(request: Request):
     return response.json({"test": True})
+
+
+async def server_validation_handler(request, error: ValidationError):
+    details = []
+    for e in error.errors():
+        for field in e['loc']:
+            details.append({
+                'msg': e['msg'],
+                'field': field
+            })
+    
+    return response.json({
+        "detail": details
+    }, 422)
+
+
+app.error_handler.add(ValidationError, server_validation_handler)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,9 @@
 from datetime import date
+from inspect import isawaitable
 from uuid import UUID
 from typing import Literal
+from functools import wraps
+
 from pydantic import (
     BaseModel,
     constr,
@@ -25,17 +28,21 @@ class SearchRequest(BaseModel):
 
     @root_validator
     def maximum_number_of_people(cls, values):
-        assert values["adults"] + values["children"] + values["infants"] <= 9
+        assert (
+            values["adults"] + values["children"] + values["infants"] <= 9
+        ), "Too many people, maximum is 9"
         return values
 
     @root_validator
     def more_adults_than_non_adults(cls, values):
-        assert values["adults"] >= values["children"] + values["infants"]
+        assert (
+            values["adults"] >= values["children"] + values["infants"]
+        ), "More non-adults than adults"
         return values
 
     @validator("dep_at", "arr_at")
     def dates_not_in_the_past(cls, val):
-        assert date.fromisoformat(val) >= date.today()
+        assert date.fromisoformat(val) >= date.today(), "Dates in the past"
         return val
 
 
@@ -66,11 +73,14 @@ class Passenger(BaseModel):
         )
         age_type = values["type"]
         if age >= 16:
-            assert age_type == "ADT"
+            right_age_type = "ADT"
         elif age >= 2:
-            assert age_type == "CHD"
+            right_age_type = "CHD"
         else:
-            assert age_type == "INF"
+            right_age_type = "INF"
+        assert (
+            age_type == right_age_type
+        ), f"type is {age_type} but should be {right_age_type}"
         return values
 
 
@@ -79,6 +89,21 @@ class BookingRequest(BaseModel):
     phone: constr(regex=r"[+](\d)*")
     email: EmailStr
     passengers: list[Passenger]
+
+
+def validate(model):
+    def decorator(f):
+        @wraps(f)
+        async def decorated_function(request, *args, **kwargs):
+            model(**request.json)
+            response = f(request, *args, **kwargs)
+            if isawaitable(response):
+                response = await response
+            return response
+
+        return decorated_function
+
+    return decorator
 
 
 if __name__ == "__main__":
