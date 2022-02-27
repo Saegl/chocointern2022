@@ -5,6 +5,7 @@ import aioredis
 import ujson
 from sanic import Sanic, response
 from sanic.request import Request
+from sanic_ext import validate
 from tortoise.contrib.sanic import register_tortoise
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import timezone
@@ -44,19 +45,14 @@ async def cleanup(app, loop):
 
 
 @app.post("/search")
-async def create_search(request: Request):
+@validate(json=validation.SearchRequest)
+async def create_search(request: Request, body: validation.SearchRequest):
     # Generate new UUID
     search_id = str(uuid4())
-    try:
-        validated_request = validation.SearchRequest(**request.json).dict()
-    except ValidationError as e:
-        # response.json() is not used,
-        # because e.json() already serialized by pydantic
-        return response.raw(body=e.json(), content_type="application/json")
 
     # Start searching without blocking
     app.add_task(
-        tasks.load_search_and_save(app.ctx.redis, search_id, validated_request)
+        tasks.load_search_and_save(app.ctx.redis, search_id, request.json)
     )
     return response.json({"id": search_id})
 
@@ -93,8 +89,8 @@ async def get_booking(request: Request):
 
 
 @app.post("/booking")
-async def create_booking(request: Request):
-    # TODO validation
+@validate(json=validation.BookingRequest)
+async def create_booking(request: Request, body: validation.BookingRequest):
     provider_response = await providers.book_offer(request.json)
     await models.Booking.create(**provider_response)
     return response.json(provider_response)

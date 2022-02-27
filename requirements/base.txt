@@ -8,3 +8,4 @@ asyncpg==0.25.0
 apscheduler==3.*
 pytz==2021.*
 email-validator>=1.0.3
+sanic-ext==22.*
