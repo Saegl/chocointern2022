@@ -1,17 +1,25 @@
 import ujson
+import asyncio
 from aioredis import Redis
 
 from mini_showcase import providers, settings, models
 
 
-async def load_search_and_save(redis: Redis, search_id, request_data):
-    provider_response = await providers.search_offers(request_data)
+async def load_provider(redis: Redis, request_data, provider_name, search_id):
+    provider_response = await providers.search_offers(
+        request_data, provider_name
+    )
 
-    # Save provider_response for "app.get_search_by_id" handler
+    old_data = ujson.loads(await redis.get(search_id))
+
+    new_items = provider_response["items"]
+    old_items = old_data["items"]
+
+    # Update items for "app.get_search_by_id" handler
     await redis.setex(
         search_id,
         settings.REDIS_SEARCH_TTL,
-        ujson.dumps({"status": "DONE", "items": provider_response['items']}),
+        ujson.dumps({"status": "PENDING", "items": old_items + new_items}),
     )
 
     # Save offers for "app.get_offer_by_id" handler
@@ -25,6 +33,21 @@ async def load_search_and_save(redis: Redis, search_id, request_data):
 
         commands_success = await pipe.execute()
         assert all(commands_success)
+
+
+async def load_search_and_save(redis: Redis, search_id, request_data):
+    await asyncio.gather(
+        *[load_provider(redis, request_data, provider_name, search_id)
+        for provider_name in providers.PROVIDERS]
+    )
+    
+    # Update status to DONE
+    items = ujson.loads(await redis.get(search_id))["items"]
+    await redis.setex(
+        search_id,
+        settings.REDIS_SEARCH_TTL,
+        ujson.dumps({"status": "DONE", "items": items}),
+    )
 
 
 async def update_currency(app):

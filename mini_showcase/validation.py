@@ -15,7 +15,6 @@ from pydantic import (
 
 
 class SearchRequest(BaseModel):
-    provider: Literal["Amadeus", "Sabre"]
     cabin: Literal["Economy", "Business"] = "Economy"
     origin: constr(strict=True, min_length=3, max_length=3)
     destination: constr(strict=True, min_length=3, max_length=3)
