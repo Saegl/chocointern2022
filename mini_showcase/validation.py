@@ -1,6 +1,14 @@
 from datetime import date
+from uuid import UUID
 from typing import Literal
-from pydantic import BaseModel, constr, conint, root_validator, validator
+from pydantic import (
+    BaseModel,
+    constr,
+    conint,
+    root_validator,
+    validator,
+    EmailStr,
+)
 
 
 class SearchRequest(BaseModel):
@@ -31,20 +39,70 @@ class SearchRequest(BaseModel):
         return val
 
 
+class PassengerDocument(BaseModel):
+    number: str
+    expires_at: str  # TODO validate expires_at
+    iin: constr(min_length=12, max_length=12)
+
+
+class Passenger(BaseModel):
+    gender: Literal["M", "F"]
+    type: Literal["ADT", "CHD", "INF"]
+    first_name: str
+    last_name: str
+    date_of_birth: str
+    citizenship: constr(min_length=2, max_length=3)
+    document: PassengerDocument
+
+    @root_validator
+    def check_age_type(cls, values):
+        dob = date.fromisoformat(values["date_of_birth"])
+        today = date.today()
+
+        age = (
+            today.year
+            - dob.year
+            - ((today.month, today.day) < (dob.month, dob.day))
+        )
+        age_type = values["type"]
+        if age >= 16:
+            assert age_type == "ADT"
+        elif age >= 2:
+            assert age_type == "CHD"
+        else:
+            assert age_type == "INF"
+        return values
+
+
+class BookingRequest(BaseModel):
+    offer_id: UUID
+    phone: constr(regex=r"[+](\d)*")
+    email: EmailStr
+    passengers: list[Passenger]
+
+
 if __name__ == "__main__":
-    example = {
-        "provider": "Amadeus",
-        "cabin": "Economy",
-        "origin": "ALA",
-        "destination": "NQZ",
-        "dep_at": "2022-03-09",
-        "arr_at": "2022-03-15",
-        "adults": 1,
-        "children": 0,
-        "infants": 0,
-        "currency": "KZT",
+    book_example = {
+        "offer_id": "d5a7a5b7-a4a3-49e7-9c69-b44d2cbe15cf",
+        "phone": "+77777777777",
+        "email": "user@example.com",
+        "passengers": [
+            {
+                "gender": "M",
+                "type": "ADT",
+                "first_name": "Craig",
+                "last_name": "Bensen",
+                "date_of_birth": "2001-06-13",
+                "citizenship": "US",
+                "document": {
+                    "number": "N2343545634",
+                    "expires_at": "2025-08-24",
+                    "iin": "123456789123",
+                },
+            }
+        ],
     }
 
-    model = SearchRequest(**example)
-    print(model)
+    model = BookingRequest(**book_example)
+    # print(model)
     print(model.json())
