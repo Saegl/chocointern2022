@@ -9,7 +9,9 @@ async def load_search_and_save(redis: Redis, search_id, request_data):
 
     # Save provider_response for "app.get_search_by_id" handler
     await redis.setex(
-        search_id, settings.REDIS_SEARCH_TTL, ujson.dumps(provider_response)
+        search_id,
+        settings.REDIS_SEARCH_TTL,
+        ujson.dumps({"status": "DONE", "items": provider_response['items']}),
     )
 
     # Save offers for "app.get_offer_by_id" handler

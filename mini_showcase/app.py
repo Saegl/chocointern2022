@@ -1,15 +1,21 @@
 from uuid import UUID, uuid4
 
 import aioredis
+import tortoise
 import ujson
-from pydantic import ValidationError
-from sanic import Sanic, json, response
+from sanic import Sanic, response
 from sanic.request import Request
 from tortoise.contrib.sanic import register_tortoise
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import timezone
 
 from mini_showcase import providers, validation, models, settings, tasks
+from mini_showcase.error_handlers import (
+    BookingNotFound,
+    OfferNotFound,
+    SearchRequestNotFound,
+    configure_error_handlers,
+)
 
 
 app = Sanic("mini-showcase")
@@ -20,6 +26,7 @@ register_tortoise(
     modules={"models": ["mini_showcase.models"]},
     generate_schemas=True,
 )
+configure_error_handlers(app)
 
 
 @app.listener("before_server_start")
@@ -48,6 +55,13 @@ async def cleanup(app, loop):
 async def create_search(request: Request):
     # Generate new UUID
     search_id = str(uuid4())
+
+    await app.ctx.redis.setex(
+        search_id,
+        settings.REDIS_SEARCH_TTL,
+        ujson.dumps({"status": "PENDING", "items": []}),
+    )
+
     # Start searching without blocking
     app.add_task(
         tasks.load_search_and_save(app.ctx.redis, search_id, request.json)
@@ -60,16 +74,17 @@ async def get_search_by_id(request: Request, search_id: UUID):
     redis: aioredis.Redis = app.ctx.redis
     search_id = str(search_id)
 
-    if search_data := await redis.get(search_id):
-        status = "DONE"
-        data = ujson.loads(search_data)
-        items = data["items"]
-    else:
-        status = "PENDING"
-        items = []
+    search_data = await redis.get(search_id)
+    if not search_data:
+        raise SearchRequestNotFound()
 
+    data = ujson.loads(search_data)
     return response.json(
-        {"search_id": search_id, "status": status, "items": items}
+        {
+            "search_id": search_id,
+            "status": data["status"],
+            "items": data["items"],
+        }
     )
 
 
@@ -78,6 +93,8 @@ async def get_offer_by_id(request: Request, offer_id: UUID):
     redis: aioredis.Redis = app.ctx.redis
 
     data = await redis.get(f"offer:{offer_id}")
+    if not data:
+        raise OfferNotFound()
     return response.raw(data, content_type="application/json")
 
 
@@ -96,7 +113,10 @@ async def create_booking(request: Request):
 
 @app.get("/booking/<booking_id:uuid>")
 async def get_booking_by_id(request: Request, booking_id: UUID):
-    booking = await models.Booking.get(id=booking_id)
+    try:
+        booking = await models.Booking.get(id=booking_id)
+    except tortoise.exceptions.DoesNotExist:
+        raise BookingNotFound()
     booking_pydantic = await models.BookingPydantic.from_tortoise_orm(booking)
     return response.raw(
         booking_pydantic.json(), content_type="application/json"
@@ -106,23 +126,6 @@ async def get_booking_by_id(request: Request, booking_id: UUID):
 @app.get("/test")
 async def test(request: Request):
     return response.json({"test": True})
-
-
-async def server_validation_handler(request, error: ValidationError):
-    details = []
-    for e in error.errors():
-        for field in e['loc']:
-            details.append({
-                'msg': e['msg'],
-                'field': field
-            })
-    
-    return response.json({
-        "detail": details
-    }, 422)
-
-
-app.error_handler.add(ValidationError, server_validation_handler)
 
 
 if __name__ == "__main__":
