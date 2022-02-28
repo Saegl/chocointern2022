@@ -1,7 +1,7 @@
-import asyncio
 import httpx
 
 from mini_showcase import settings
+from mini_showcase.error_handlers import OfferNotFound
 
 
 AVIA_API_ROOT = "https://avia-api.k8s-test.aviata.team"
@@ -33,7 +33,6 @@ async def book_offer(json_data) -> dict:
             json=json_data,
             timeout=settings.PROVIDERS_API_TIMEOUT,
         )
-    if res.status_code != 200:
-        # TODO processing for 404, 422 in stage-third
-        raise ValueError("status code is not 200\ncontent:", res.content)
+    if res.status_code == 404:
+        raise OfferNotFound()
     return res.json()
