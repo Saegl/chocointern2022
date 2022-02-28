@@ -122,9 +122,6 @@ async def get_booking(request: Request):
         (await models.BookingPydantic.from_tortoise_orm(offer)).dict()
         for offer in offers
     ]
-    for item in items:
-        # Convert UUID to string for JSON serialization
-        item["id"] = str(item["id"])
 
     return response.json(
         {
@@ -132,7 +129,8 @@ async def get_booking(request: Request):
             "limit": limit,
             "total": total,
             "items": items,
-        }
+        },
+        default=str,
     )
 
 
