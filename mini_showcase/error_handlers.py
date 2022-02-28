@@ -1,18 +1,20 @@
+import traceback
+
 from sanic import response
+from sanic.exceptions import NotFound
 from pydantic import ValidationError
-from tortoise.exceptions import DoesNotExist
 
 
-class OfferNotFound(Exception):
-    pass
+class OfferNotFound(NotFound):
+    message = "Offer not found"
 
 
-class SearchRequestNotFound(Exception):
-    pass
+class SearchRequestNotFound(NotFound):
+    message = "Search request not found"
 
 
-class BookingNotFound(Exception):
-    pass
+class BookingNotFound(NotFound):
+    message = "Booking not found"
 
 
 async def validation_handler(request, error: ValidationError):
@@ -24,24 +26,17 @@ async def validation_handler(request, error: ValidationError):
     return response.json({"detail": details}, 422)
 
 
-async def booking_not_exist_handler(request, error: BookingNotFound):
-    return response.json({"detail": ["Booking not found"]}, 404)
+async def not_found_handler(request, error: NotFound):
+    return response.json({"detail": [error.message]}, error.status_code)
 
 
-async def offer_not_found_handler(request, error: OfferNotFound):
-    return response.json({"detail": ["Offer not found"]}, 404)
-
-
-async def search_request_not_found_handler(
-    request, error: SearchRequestNotFound
-):
-    return response.json({"detail": ["Search request not found"]}, 404)
+async def server_error_handler(request, error: Exception):
+    traceback.print_tb(error.__traceback__)
+    status_code = error.status_code if hasattr(error, "status_code") else 500
+    return response.json({"error": str(error)}, status_code)
 
 
 def configure_error_handlers(app):
     app.error_handler.add(ValidationError, validation_handler)
-    app.error_handler.add(BookingNotFound, booking_not_exist_handler)
-    app.error_handler.add(OfferNotFound, offer_not_found_handler)
-    app.error_handler.add(
-        SearchRequestNotFound, search_request_not_found_handler
-    )
+    app.error_handler.add(NotFound, not_found_handler)
+    app.error_handler.add(Exception, server_error_handler)
