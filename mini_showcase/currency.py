@@ -50,6 +50,9 @@ def convert_items_currency(items, to_currency, currencies):
         currency_type = item['price']['currency']
         amount = item['price']['amount']
 
+        if currency_type == to_currency:
+            continue
+
         in_kzt = convert_to_kzt(currencies, currency_type, amount)
 
         item['price']['amount'] = convert_from_kzt(currencies, to_currency, in_kzt)
