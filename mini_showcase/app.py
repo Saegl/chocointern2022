@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 
 import aioredis
+import pydantic
 import tortoise
 import ujson
 from sanic import Sanic, response
@@ -137,6 +138,7 @@ async def get_booking(request: Request):
 @app.post("/booking")
 @validation.validate(validation.BookingRequest)
 async def create_booking(request: Request):
+    await validation.check_document_expiration(app, request)
     provider_response = await providers.book_offer(request.json)
     await models.Booking.create(**provider_response)
     return response.json(provider_response)

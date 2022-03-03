@@ -1,9 +1,12 @@
-from datetime import date
+import ujson
+from datetime import date, datetime
 from inspect import isawaitable
 from uuid import UUID
 from typing import Literal
 from functools import wraps
 
+import pydantic
+from aioredis import Redis
 from pydantic import (
     BaseModel,
     constr,
@@ -12,6 +15,8 @@ from pydantic import (
     validator,
     EmailStr,
 )
+
+from mini_showcase.error_handlers import OfferNotFound
 
 
 class SearchRequest(BaseModel):
@@ -47,7 +52,7 @@ class SearchRequest(BaseModel):
 
 class PassengerDocument(BaseModel):
     number: str
-    expires_at: str  # TODO validate expires_at
+    expires_at: str
     iin: constr(min_length=12, max_length=12)
 
 
@@ -103,6 +108,56 @@ def validate(model):
         return decorated_function
 
     return decorator
+
+
+def extract_offer_arrival_dates(offer):
+    for flight in offer["flights"]:
+        for segment in flight["segments"]:
+            flight_expiration = datetime.fromisoformat(
+                segment["arr"]["at"]
+            ).date()
+            yield flight_expiration
+
+
+async def check_document_expiration(app, request: BookingRequest) -> bool:
+    """
+    Passenger document expiration must be greater by 6 months than offer arrival date
+    raises pydantic.ValidationError if any document is expired
+    """
+    redis: Redis = app.ctx.redis
+    offer_id = request.json["offer_id"]
+    offer_data = await redis.get(f"offer:{offer_id}")
+    if not offer_data:
+        raise OfferNotFound()
+    offer = ujson.loads(offer_data)
+
+    for flight_expiration in extract_offer_arrival_dates(offer):
+        for passenger in request.json["passengers"]:
+            doc = passenger["document"]
+            doc_expiration = date.fromisoformat(doc["expires_at"])
+
+            month_diff = (
+                (doc_expiration.year - flight_expiration.year) * 12
+                + doc_expiration.month
+                - flight_expiration.month
+                - (doc_expiration.day < flight_expiration.day)
+            )
+
+            if month_diff < 6:
+                raise pydantic.ValidationError(
+                    [
+                        pydantic.error_wrappers.ErrorWrapper(
+                            ValueError(
+                                "Difference between passenger documents "
+                                "expiration time and offer arrival date "
+                                "must greater than 6 months"
+                            ),
+                            loc="expires_at",
+                        )
+                    ],
+                    BookingRequest,
+                )
+    return False
 
 
 if __name__ == "__main__":
