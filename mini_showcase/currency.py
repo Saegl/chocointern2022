@@ -33,6 +33,7 @@ async def load_currency() -> dict[str, float]:
         currencies[currency_name] = currency_value
     return currencies
 
+
 def convert_to_kzt(
     currencies: dict[str, float], from_currency_type: str, amount: float
 ):

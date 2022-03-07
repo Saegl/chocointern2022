@@ -1,7 +1,6 @@
 from uuid import UUID, uuid4
 
 import aioredis
-import pydantic
 import tortoise
 import ujson
 from sanic import Sanic, response

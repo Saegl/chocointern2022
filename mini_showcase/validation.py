@@ -90,7 +90,7 @@ class Passenger(BaseModel):
 
 class BookingRequest(BaseModel):
     offer_id: UUID
-    phone: constr(regex=r"[+](\d)*")
+    phone: constr(regex=r"[+](\d)*")  # noqa: F722
     email: EmailStr
     passengers: list[Passenger]
 
