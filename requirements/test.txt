@@ -5,3 +5,4 @@ pytest-sanic
 pytest-mock
 pytest-pythonpath
 pytest-xdist
+pytest-asyncio

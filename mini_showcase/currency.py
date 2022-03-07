@@ -58,12 +58,3 @@ def convert_items_currency(items, to_currency, currencies):
 
         item['price']['amount'] = convert_from_kzt(currencies, to_currency, in_kzt)
         item['price']['currency'] = to_currency
-
-
-if __name__ == "__main__":
-    # Check current currency
-    # Run: `python -m mini_showcase.currency`
-    from pprint import pprint
-
-    data = asyncio.run(load_currency())
-    pprint(data)
