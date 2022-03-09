@@ -1,8 +1,19 @@
 import uuid
+import pydantic
 import ujson
 import tortoise
 
 from utils import pseudo_async
+
+
+async def test_create_search(app, search_example):
+    _, response = await app.asgi_client.post(
+        "/search",
+        json=search_example,
+    )
+
+    assert response.status == 200
+    assert pydantic.types.UUID4(response.json["id"])
 
 
 async def test_get_offer_by_id(app, offer_example):
