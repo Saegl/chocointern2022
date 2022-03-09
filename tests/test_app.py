@@ -97,7 +97,8 @@ async def test_get_booking(app, mocker):
     )
 
     _, response = await app.asgi_client.get(
-        "/booking?email=example@example.com&phone=+777712345678&page=0&limit=10"
+        "/booking?email=example@example.com&"
+        "phone=+777712345678&page=0&limit=10"
     )
 
     assert response.status == 200

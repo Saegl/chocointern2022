@@ -1,10 +1,10 @@
-import ujson
 from datetime import date, datetime
 from inspect import isawaitable
 from uuid import UUID
 from typing import Literal
 from functools import wraps
 
+import ujson
 import pydantic
 from aioredis import Redis
 from pydantic import (
@@ -121,7 +121,8 @@ def extract_offer_arrival_dates(offer):
 
 async def check_document_expiration(redis: Redis, json_data: dict) -> bool:
     """
-    Passenger document expiration must be greater by 6 months than offer arrival date
+    Passenger document expiration
+    must be greater by 6 months than offer arrival date
     raises pydantic.ValidationError if any document is expired
     """
     offer_id = json_data["offer_id"]

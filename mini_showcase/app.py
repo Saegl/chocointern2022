@@ -46,7 +46,7 @@ async def init_before(app, loop):  # pragma: no cover
 
 
 @app.listener("after_server_stop")
-async def cleanup(app, loop):  # pragma: no cover
+async def cleanup(app, _):  # pragma: no cover
     await app.ctx.redis.close()
 
 
@@ -68,7 +68,7 @@ async def create_search(request: Request):
 
 
 @app.get("/search/<search_id:uuid>")
-async def get_search_by_id(request: Request, search_id: UUID):
+async def get_search_by_id(_, search_id: UUID):
     redis: aioredis.Redis = app.ctx.redis
     search_id = str(search_id)
 
@@ -87,7 +87,7 @@ async def get_search_by_id(request: Request, search_id: UUID):
 
 
 @app.get("/offers/<offer_id:uuid>")
-async def get_offer_by_id(request: Request, offer_id: UUID):
+async def get_offer_by_id(_, offer_id: UUID):
     redis: aioredis.Redis = app.ctx.redis
 
     data = await redis.get(f"offer:{offer_id}")
@@ -144,7 +144,7 @@ async def create_booking(request: Request):
 
 
 @app.get("/booking/<booking_id:uuid>")
-async def get_booking_by_id(request: Request, booking_id: UUID):
+async def get_booking_by_id(_, booking_id: UUID):
     try:
         booking = await models.Booking.get(id=booking_id)
     except tortoise.exceptions.DoesNotExist:

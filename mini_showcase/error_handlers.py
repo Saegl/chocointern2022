@@ -17,7 +17,7 @@ class BookingNotFound(NotFound):
     message = "Booking not found"
 
 
-async def validation_handler(request, error: ValidationError):
+async def validation_handler(_, error: ValidationError):
     details = []
     for e in error.errors():
         for field in e["loc"]:
@@ -26,11 +26,11 @@ async def validation_handler(request, error: ValidationError):
     return response.json({"detail": details}, 422)
 
 
-async def not_found_handler(request, error: NotFound):
+async def not_found_handler(_, error: NotFound):
     return response.json({"detail": [error.message]}, error.status_code)
 
 
-async def server_error_handler(request, error: Exception):
+async def server_error_handler(_, error: Exception):
     traceback.print_tb(error.__traceback__)
     status_code = error.status_code if hasattr(error, "status_code") else 500
     return response.json({"error": str(error)}, status_code)
