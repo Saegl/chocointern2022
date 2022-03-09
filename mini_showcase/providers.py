@@ -20,6 +20,8 @@ async def search_offers(json_data, provider_name) -> list[dict]:
                 json=json_data,
                 timeout=settings.PROVIDERS_API_TIMEOUT,
             )
+        if res.status_code == 422:
+            raise ValueError("Provider API validation error")
         response_json = res.json()
         return response_json['items']
     except httpx.TimeoutException:
