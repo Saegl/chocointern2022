@@ -54,6 +54,6 @@ async def load_search_and_save(app, search_id, request_data):
     )
 
 
-async def update_currency(app):
+async def update_currency(app):  # pragma: no cover (Currencies tested in test_currency.py)
     currency = await models.Currency.get_current_currency()
     app.ctx.currency = currency.snapshot
