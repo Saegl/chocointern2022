@@ -20,26 +20,6 @@
             "terminal": null
           },
           "baggage": null
-        },
-        {
-          "operating_airline": "KC",
-          "flight_number": "708",
-          "equipment": "Airbus A350",
-          "cabin": "Economy",
-          "dep": {
-            "at": "2022-03-09T05:45:00+05:00",
-            "airport": { "code": "KSN", "name": "Костанай" },
-            "terminal": "5"
-          },
-          "arr": {
-            "at": "2022-03-09T08:55:00+06:00",
-            "airport": {
-              "code": "NQZ",
-              "name": "Нур-Султан (Астана)"
-            },
-            "terminal": "1"
-          },
-          "baggage": null
         }
       ]
     }

@@ -4,28 +4,13 @@ import pytest
 import pydantic
 import ujson
 
-from utils import load_file
+from utils import pseudo_async
 from mini_showcase.validation import (
     BookingRequest,
     SearchRequest,
     check_document_expiration,
 )
 from mini_showcase.error_handlers import OfferNotFound
-
-
-@pytest.fixture
-def book_example():
-    return ujson.loads(load_file("tests/data/book_example.json"))
-
-
-@pytest.fixture
-def search_example():
-    return ujson.loads(load_file("tests/data/search_example.json"))
-
-
-@pytest.fixture
-def offer_example():
-    return ujson.loads(load_file("tests/data/offer_example.json"))
 
 
 def test_book_request(book_example):
@@ -52,13 +37,10 @@ def test_search_request(search_example):
 
 
 async def test_document_expiration(mocker, book_example, offer_example):
-    async def make_async(val):
-        return val
-
     # Check with valid documents
     redis = mocker.Mock()
     redis.get = mocker.Mock(
-        return_value=make_async(ujson.dumps(offer_example))
+        return_value=pseudo_async(ujson.dumps(offer_example))
     )
 
     await check_document_expiration(redis, book_example)
@@ -73,13 +55,13 @@ async def test_document_expiration(mocker, book_example, offer_example):
     ] = datetime.now().isoformat()
 
     redis.get = mocker.Mock(
-        return_value=make_async(ujson.dumps(offer_example))
+        return_value=pseudo_async(ujson.dumps(offer_example))
     )
 
     with pytest.raises(pydantic.ValidationError):
         await check_document_expiration(redis, book_example)
 
     # Offer not found
-    redis.get = mocker.Mock(return_value=make_async(None))
+    redis.get = mocker.Mock(return_value=pseudo_async(None))
     with pytest.raises(OfferNotFound):
         await check_document_expiration(redis, book_example)

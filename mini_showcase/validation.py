@@ -141,7 +141,7 @@ async def check_document_expiration(redis: Redis, json_data: dict) -> bool:
                 - flight_expiration.month
                 - (doc_expiration.day < flight_expiration.day)
             )
-            
+
             if month_diff < 6:
                 raise pydantic.ValidationError(
                     [

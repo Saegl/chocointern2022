@@ -30,7 +30,7 @@ configure_error_handlers(app)
 
 
 @app.listener("before_server_start")
-async def init_before(app, loop):
+async def init_before(app, loop):  # pragma: no cover
     app.ctx.redis = aioredis.from_url(
         settings.REDIS_URL, decode_responses=True
     )
@@ -46,7 +46,7 @@ async def init_before(app, loop):
 
 
 @app.listener("after_server_stop")
-async def cleanup(app, loop):
+async def cleanup(app, loop):  # pragma: no cover
     await app.ctx.redis.close()
 
 
