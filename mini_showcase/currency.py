@@ -1,4 +1,3 @@
-import asyncio
 import xml.etree.ElementTree as ET
 from datetime import date
 

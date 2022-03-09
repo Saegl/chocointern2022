@@ -1,0 +1,62 @@
+{
+  "id": "ab8a6051-c5bc-4802-aa39-0bc541ab804a",
+  "flights": [
+    {
+      "duration": 7800,
+      "segments": [
+        {
+          "operating_airline": "KC",
+          "flight_number": "756",
+          "equipment": "Boeing 727-100 Freighter",
+          "cabin": "Economy",
+          "dep": {
+            "at": "2022-03-09T03:00:00+06:00",
+            "airport": { "code": "ALA", "name": "Алматы" },
+            "terminal": "1"
+          },
+          "arr": {
+            "at": "2022-03-09T02:00:00+05:00",
+            "airport": { "code": "KSN", "name": "Костанай" },
+            "terminal": null
+          },
+          "baggage": null
+        },
+        {
+          "operating_airline": "KC",
+          "flight_number": "708",
+          "equipment": "Airbus A350",
+          "cabin": "Economy",
+          "dep": {
+            "at": "2022-03-09T05:45:00+05:00",
+            "airport": { "code": "KSN", "name": "Костанай" },
+            "terminal": "5"
+          },
+          "arr": {
+            "at": "2022-03-09T08:55:00+06:00",
+            "airport": {
+              "code": "NQZ",
+              "name": "Нур-Султан (Астана)"
+            },
+            "terminal": "1"
+          },
+          "baggage": null
+        }
+      ]
+    }
+  ],
+  "price": { "amount": 100, "currency": "EUR" },
+  "refundable": null,
+  "baggage": null,
+  "cabin": "Economy",
+  "airline": {
+    "code": "KC",
+    "name": "Air Astana",
+    "logo": {
+      "url": "https://avia-api.k8s-test.aviata.team/img/3093-fe65813d49024ba21b9ac7e21781fad5.svg",
+      "width": null,
+      "height": null
+    }
+  },
+  "passengers": { "ADT": 1, "CHD": 0, "INF": 0 },
+  "type": "RT"
+}

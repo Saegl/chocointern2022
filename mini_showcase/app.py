@@ -137,7 +137,7 @@ async def get_booking(request: Request):
 @app.post("/booking")
 @validation.validate(validation.BookingRequest)
 async def create_booking(request: Request):
-    await validation.check_document_expiration(app, request)
+    await validation.check_document_expiration(app.ctx.redis, request.json)
     provider_response = await providers.book_offer(request.json)
     await models.Booking.create(**provider_response)
     return response.json(provider_response)

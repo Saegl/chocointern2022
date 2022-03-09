@@ -119,20 +119,19 @@ def extract_offer_arrival_dates(offer):
             yield flight_expiration
 
 
-async def check_document_expiration(app, request: BookingRequest) -> bool:
+async def check_document_expiration(redis: Redis, json_data: dict) -> bool:
     """
     Passenger document expiration must be greater by 6 months than offer arrival date
     raises pydantic.ValidationError if any document is expired
     """
-    redis: Redis = app.ctx.redis
-    offer_id = request.json["offer_id"]
+    offer_id = json_data["offer_id"]
     offer_data = await redis.get(f"offer:{offer_id}")
     if not offer_data:
         raise OfferNotFound()
     offer = ujson.loads(offer_data)
 
     for flight_expiration in extract_offer_arrival_dates(offer):
-        for passenger in request.json["passengers"]:
+        for passenger in json_data["passengers"]:
             doc = passenger["document"]
             doc_expiration = date.fromisoformat(doc["expires_at"])
 
@@ -142,7 +141,7 @@ async def check_document_expiration(app, request: BookingRequest) -> bool:
                 - flight_expiration.month
                 - (doc_expiration.day < flight_expiration.day)
             )
-
+            
             if month_diff < 6:
                 raise pydantic.ValidationError(
                     [
@@ -158,30 +157,3 @@ async def check_document_expiration(app, request: BookingRequest) -> bool:
                     BookingRequest,
                 )
     return False
-
-
-if __name__ == "__main__":
-    book_example = {
-        "offer_id": "d5a7a5b7-a4a3-49e7-9c69-b44d2cbe15cf",
-        "phone": "+77777777777",
-        "email": "user@example.com",
-        "passengers": [
-            {
-                "gender": "M",
-                "type": "ADT",
-                "first_name": "Craig",
-                "last_name": "Bensen",
-                "date_of_birth": "2001-06-13",
-                "citizenship": "US",
-                "document": {
-                    "number": "N2343545634",
-                    "expires_at": "2025-08-24",
-                    "iin": "123456789123",
-                },
-            }
-        ],
-    }
-
-    model = BookingRequest(**book_example)
-    # print(model)
-    print(model.json())
