@@ -20,7 +20,7 @@ class RedisPipeMock:
         self.redis = redis
 
     def setex(self, key, ttl, value):
-        self.redis.setex(key, ttl, value)
+        self.redis.mem[key] = value
 
     async def execute(self):
         return []

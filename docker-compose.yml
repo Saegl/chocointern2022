@@ -35,6 +35,7 @@ services:
             - database-data:/var/lib/postgresql/data
     pgadmin:
         image: dpage/pgadmin4:6.5
+        restart: always
         environment:
             PGADMIN_DEFAULT_EMAIL: admin@admin.com
             PGADMIN_DEFAULT_PASSWORD: root

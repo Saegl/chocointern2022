@@ -12,7 +12,7 @@ PROVIDERS = ["Amadeus", "Sabre"]
 
 
 async def search_offers(json_data, provider_name) -> list[dict]:
-    json_data['provider'] = provider_name
+    json_data["provider"] = provider_name
     try:
         async with httpx.AsyncClient() as client:
             res = await client.post(
@@ -23,7 +23,7 @@ async def search_offers(json_data, provider_name) -> list[dict]:
         if res.status_code == 422:
             raise ValueError("Provider API validation error")
         response_json = res.json()
-        return response_json['items']
+        return response_json["items"]
     except httpx.TimeoutException:
         return []
 
